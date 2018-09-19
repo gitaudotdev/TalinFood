@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/mybg"
+    tools:context=".SignIn">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_centerInParent="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.rengwuxian.materialedittext.MaterialEditText
+            android:id="@+id/edtPhone"
+            android:hint="Phone Number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="@android:color/white"
+            android:text="0791876624"
+            android:inputType="phone"
+            android:textSize="34sp"
+            app:met_maxCharacters="11"
+            app:met_primaryColor="@android:color/white"
+            app:met_floatingLabel="highlight"
+            app:met_baseColor="@android:color/white"
+            app:met_singleLineEllipsis="true"
+            />
+        
+        <com.rengwuxian.materialedittext.MaterialEditText
+            android:id="@+id/edtPass"
+            android:hint="Password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="@android:color/white"
+            android:text="password"
+            android:inputType="textPassword"
+            android:textSize="34sp"
+            app:met_maxCharacters="11"
+            app:met_primaryColor="@android:color/white"
+            app:met_floatingLabel="highlight"
+            app:met_baseColor="@android:color/white"
+            app:met_singleLineEllipsis="true"
+            />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.rey.material.widget.CheckBox
+                android:id="@+id/ckbRemember"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                style="@style/Material.Drawable.CheckBox"
+                android:gravity="center_vertical"
+                android:text="Remember me"
+                android:textColor="@android:color/white"
+                app:cbd_strokeColor="@android:color/white"
+                app:cbd_tickColor="@color/colorPrimaryDark"
+                />
+
+        <TextView
+            android:id="@+id/txtForgotPwd"
+            android:text="@string/forgot_pwd"
+            android:textColor="@android:color/white"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSign"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_margin="8dp"
+        android:background="@color/btnsignActive"
+        android:layout_alignParentBottom="true"
+        android:text="SIGN IN"
+        android:textColor="@android:color/white" />
+
+</RelativeLayout>
