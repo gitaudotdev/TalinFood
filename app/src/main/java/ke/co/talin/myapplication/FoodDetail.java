@@ -205,7 +205,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
                         {
                             //Remove old value
                             ratingDb.child(Common.currentUser.getPhone()).removeValue();
-                            //update ew Value
+                            //update new Value
                             ratingDb.child(Common.currentUser.getPhone()).setValue(rating);
                         }
                         else
