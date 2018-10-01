@@ -8,17 +8,19 @@ public class Request {
     private String address;
     private String total;
     private String status;
+    private String comments;
     private List<Order>foods;
 
     public Request() {
     }
 
-    public Request(String phone, String name, String address, String total, List<Order> foods) {
+    public Request(String phone, String name, String address, String total, String status, String comments, List<Order> foods) {
         this.phone = phone;
         this.name = name;
         this.address = address;
         this.total = total;
-        this.status = "0"; // default is 0: 0:placed,1:shipping, 2:shipped
+        this.status = status;
+        this.comments = comments;
         this.foods = foods;
     }
 
@@ -60,6 +62,14 @@ public class Request {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getComments() {
+        return comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
     }
 
     public List<Order> getFoods() {
