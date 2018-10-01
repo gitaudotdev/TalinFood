@@ -215,7 +215,7 @@ public class FoodList extends AppCompatActivity {
                         else
                         {
                             localDb.removeFromFavorites(mAdapter.getRef(position).getKey());
-                            viewHolder.fave.setImageResource(R.drawable.ic_favorite_black_24dp);
+                            viewHolder.fave.setImageResource(R.drawable.ic_favorite_border_black_24dp);
                             Toast.makeText(FoodList.this, ""+model.getName()+"was removed from Favorites", Toast.LENGTH_SHORT).show();
 
 
