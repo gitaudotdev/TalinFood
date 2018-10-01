@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.rengwuxian.materialedittext.MaterialEditText;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -99,13 +101,14 @@ public class Cart extends AppCompatActivity {
         alertdialog.setTitle("One More Step!");
         alertdialog.setMessage("Enter your address: ");
 
-        final EditText edtAddress = new EditText(Cart.this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-        );
-        edtAddress.setLayoutParams(lp);
-        alertdialog.setView(edtAddress);//add edit text to alert dialog
+        LayoutInflater inflater = this.getLayoutInflater();
+        View order_address_comment = inflater.inflate(R.layout.order_address_comment,null);
+
+        final MaterialEditText edtAddress = order_address_comment.findViewById(R.id.edtAddress);
+        final MaterialEditText edtComment = order_address_comment.findViewById(R.id.edtComment);
+
+
+        alertdialog.setView(order_address_comment);
         alertdialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
 
 
@@ -118,6 +121,8 @@ public class Cart extends AppCompatActivity {
                         Common.currentUser.getName(),
                         edtAddress.getText().toString(),
                         txt_total.getText().toString(),
+                        "0",
+                        edtComment.getText().toString(),
                         cart
                 );
                 //submit to Firebase
