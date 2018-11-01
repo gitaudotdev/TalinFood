@@ -27,7 +27,7 @@ import io.paperdb.Paper;
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Interface.ItemClickListener;
 import ke.co.talin.myapplication.Model.Category;
-import ke.co.talin.myapplication.Service.ListenOrder;
+
 import ke.co.talin.myapplication.ViewHolder.MenuViewHolder;
 
 public class HomeActivity extends AppCompatActivity
@@ -94,9 +94,7 @@ public class HomeActivity extends AppCompatActivity
             return;
         }
 
-        // Register Service
-        Intent service = new Intent(HomeActivity.this, ListenOrder.class);
-        startService(service);
+
     }
 
     private void loadMenu() {
