@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.squareup.picasso.Picasso;
 
 import io.paperdb.Paper;
@@ -28,6 +29,7 @@ import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Interface.ItemClickListener;
 import ke.co.talin.myapplication.Model.Category;
 
+import ke.co.talin.myapplication.Model.Token;
 import ke.co.talin.myapplication.ViewHolder.MenuViewHolder;
 
 public class HomeActivity extends AppCompatActivity
@@ -94,7 +96,15 @@ public class HomeActivity extends AppCompatActivity
             return;
         }
 
+        //Send token
+        updateToken(FirebaseInstanceId.getInstance().getToken());
+    }
 
+    private void updateToken(String token) {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference tokens = db.getReference("Tokens");
+        Token data = new Token(token,false);
+        tokens.child(Common.currentUser.getPhone()).setValue(data);
     }
 
     private void loadMenu() {
