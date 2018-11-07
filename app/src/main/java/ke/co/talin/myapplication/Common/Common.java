@@ -5,6 +5,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import ke.co.talin.myapplication.Model.User;
+import ke.co.talin.myapplication.Remote.APIService;
+import ke.co.talin.myapplication.Remote.RetrofitClient;
 
 public class Common {
     public static User currentUser;
@@ -16,6 +18,12 @@ public class Common {
             return "On my Way";
         else
             return "Shipped";
+    }
+
+    public static final String BASE_URL ="https://fcm.googleapis.com/";
+
+    public static APIService getFCMService(){
+        return RetrofitClient.getClient(BASE_URL).create(APIService.class);
     }
 
     public static final String DELETE = "Delete";
