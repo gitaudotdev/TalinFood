@@ -186,15 +186,15 @@ public class Cart extends AppCompatActivity {
                             .enqueue(new Callback<MyResponse>() {
                                 @Override
                                 public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
-                                    if(response.body().success==1)
-                                    {
-                                        Toast.makeText(Cart.this, "Thank you, Your Order has been placed", Toast.LENGTH_SHORT).show();
-                                        finish();
-                                    }
-                                    else
-                                    {
-                                        Toast.makeText(Cart.this, "Failed!!..", Toast.LENGTH_SHORT).show();
-                                    }
+                                   //Only run when get result
+                                    if(response.code()==200) {
+                                       if (response.body().success == 1) {
+                                           Toast.makeText(Cart.this, "Thank you, Your Order has been placed", Toast.LENGTH_SHORT).show();
+                                           finish();
+                                       } else {
+                                           Toast.makeText(Cart.this, "Failed!!..", Toast.LENGTH_SHORT).show();
+                                       }
+                                   }
                                 }
 
                                 @Override
