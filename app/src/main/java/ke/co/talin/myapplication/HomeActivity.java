@@ -1,11 +1,16 @@
 package ke.co.talin.myapplication;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -15,10 +20,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -31,6 +38,8 @@ import ke.co.talin.myapplication.Model.Category;
 
 import ke.co.talin.myapplication.Model.Token;
 import ke.co.talin.myapplication.ViewHolder.MenuViewHolder;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -43,16 +52,60 @@ public class HomeActivity extends AppCompatActivity
     RecyclerView recycler;
     RecyclerView.LayoutManager layoutManager;
 
+    SwipeRefreshLayout swipeRefreshLayout;
 
     FirebaseRecyclerAdapter<Category,MenuViewHolder> adapter;
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/restaurant_font.otf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_home);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("MENU");
         setSupportActionBar(toolbar);
+
+        //View
+        swipeRefreshLayout = findViewById(R.id.swipe_layout);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if(!Common.isConnectedToInternet(getBaseContext()))
+                    loadMenu();
+                else
+                {
+                    Toast.makeText(getBaseContext(), "Please Check Your Connection..", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        });
+
+        //Default Load for first time
+        swipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                if(!Common.isConnectedToInternet(getBaseContext()))
+                    loadMenu();
+                else
+                {
+                    Toast.makeText(getBaseContext(), "Please Check Your Connection..", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        });
+
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
@@ -85,16 +138,12 @@ public class HomeActivity extends AppCompatActivity
         //Load Menu
         recycler = findViewById(R.id.recycler_menu);
         recycler.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(this);
-        recycler.setLayoutManager(layoutManager);
+//        layoutManager = new LinearLayoutManager(this);
+//        recycler.setLayoutManager(layoutManager);
+        recycler.setLayoutManager(new GridLayoutManager(this,2));
 
-        if(!Common.isConnectedToInternet(this))
-             loadMenu();
-        else
-        {
-            Toast.makeText(this, "Please Check Your Connection..", Toast.LENGTH_SHORT).show();
-            return;
-        }
+
+
 
         //Send token
         updateToken(FirebaseInstanceId.getInstance().getToken());
@@ -108,30 +157,47 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void loadMenu() {
-         adapter = new FirebaseRecyclerAdapter<Category, MenuViewHolder>(Category.class,R.layout.menu_item,MenuViewHolder.class,category) {
+        FirebaseRecyclerOptions<Category> options = new FirebaseRecyclerOptions.Builder<Category>()
+                .setQuery(category,Category.class)
+                .build();
+
+        adapter = new FirebaseRecyclerAdapter<Category, MenuViewHolder>(options) {
             @Override
-            protected void populateViewHolder(MenuViewHolder viewHolder, Category model, int position) {
-                viewHolder.txtmenu.setText(model.getName());
-
-                Picasso.get().load(model.getImage())
-                        .into(viewHolder.images);
-
-                final Category clickItem= model;
-
-                viewHolder.setItemClickListener(new ItemClickListener() {
+            protected void onBindViewHolder(@NonNull MenuViewHolder holder, int position, @NonNull Category model) {
+                holder.txtmenu.setText(model.getName());
+                Picasso.get()
+                        .load(model.getImage())
+                        .into(holder.images);
+                final Category clickItem = model;
+                holder.setItemClickListener(new ItemClickListener() {
                     @Override
                     public void onClick(View view, int position, boolean isLongClick) {
-                        //Get CategoryId and send to new Activity
+                        //Get Category and Send to new activity
                         Intent foodList = new Intent(HomeActivity.this,FoodList.class);
-                        //Because CategoryId is key so we just get key of this item
-                        foodList.putExtra("categoryId",adapter.getRef(position).getKey());
+                        //Because CategoryId is key, so we just get the key for this item
+                        foodList.putExtra("CategoryId",adapter.getRef(position).getKey());
                         startActivity(foodList);
-
                     }
                 });
             }
+
+            @NonNull
+            @Override
+            public MenuViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int position) {
+                View itemView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.menu_item,parent,false);
+                return new MenuViewHolder(itemView);
+            }
         };
+        adapter.startListening();
         recycler.setAdapter(adapter);
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.stopListening();
     }
 
     @Override

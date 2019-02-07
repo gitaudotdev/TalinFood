@@ -1,5 +1,6 @@
 package ke.co.talin.myapplication;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -29,6 +30,8 @@ import ke.co.talin.myapplication.Database.Database;
 import ke.co.talin.myapplication.Model.Food;
 import ke.co.talin.myapplication.Model.Order;
 import ke.co.talin.myapplication.Model.Rating;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class FoodDetail extends AppCompatActivity implements RatingDialogListener{
 
@@ -49,8 +52,17 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
     Food currentfood;
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/restaurant_font.otf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_food_detail);
 
         database = FirebaseDatabase.getInstance();
@@ -210,7 +222,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
                         }
                         else
                         {
-                            //update ew Value
+                            //update new Value
                             ratingDb.child(Common.currentUser.getPhone()).setValue(rating);
                         }
                         Toast.makeText(FoodDetail.this, "Thank you For Your Feedback", Toast.LENGTH_SHORT).show();

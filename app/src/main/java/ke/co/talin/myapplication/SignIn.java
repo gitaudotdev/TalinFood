@@ -2,6 +2,7 @@ package ke.co.talin.myapplication;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.security.ConfirmationNotAvailableException;
@@ -26,6 +27,8 @@ import com.rey.material.widget.CheckBox;
 import io.paperdb.Paper;
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Model.User;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class SignIn extends AppCompatActivity {
 
@@ -38,8 +41,17 @@ public class SignIn extends AppCompatActivity {
     DatabaseReference user_tbl;
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/restaurant_font.otf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_sign_in);
 
         btnsign = findViewById(R.id.btnSign);

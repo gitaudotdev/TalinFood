@@ -23,8 +23,7 @@ import ke.co.talin.myapplication.Interface.ItemClickListener;
 import ke.co.talin.myapplication.Model.Order;
 import ke.co.talin.myapplication.R;
 
-class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
-View.OnCreateContextMenuListener
+class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnCreateContextMenuListener
 {
 
     public TextView txt_cart_name,txt_price;
