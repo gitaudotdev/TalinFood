@@ -93,7 +93,7 @@ public class SignIn extends AppCompatActivity {
                     dialog.setMessage("Please Wait...");
                     dialog.show();
 
-                    user_tbl.addValueEventListener(new ValueEventListener() {
+                    user_tbl.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             //check if user exists on database
@@ -108,6 +108,8 @@ public class SignIn extends AppCompatActivity {
                                     Common.currentUser = user;
                                     startActivity(intent);
                                     finish();
+
+                                    user_tbl.removeEventListener(this);
 
                                 } else {
                                     Toast.makeText(SignIn.this, "Wrong Password", Toast.LENGTH_SHORT).show();

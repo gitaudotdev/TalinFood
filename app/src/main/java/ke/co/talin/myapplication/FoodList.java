@@ -1,6 +1,8 @@
 package ke.co.talin.myapplication;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.facebook.CallbackManager;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -25,6 +31,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +40,7 @@ import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Database.Database;
 import ke.co.talin.myapplication.Interface.ItemClickListener;
 import ke.co.talin.myapplication.Model.Food;
+import ke.co.talin.myapplication.Model.Order;
 import ke.co.talin.myapplication.ViewHolder.FoodViewHolder;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
@@ -57,16 +65,51 @@ public class FoodList extends AppCompatActivity {
     //Favorites
     Database localDb;
 
+    //Facebook Share
+    CallbackManager callbackManager;
+    ShareDialog shareDialog;
+
+    //Create Target From Picasso
+    Target target = new Target() {
+        @Override
+        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+            //Create Photo From Bitmap
+            SharePhoto photo = new SharePhoto.Builder()
+                    .setBitmap(bitmap)
+                    .build();
+            if(ShareDialog.canShow(SharePhotoContent.class)){
+                SharePhotoContent content = new SharePhotoContent.Builder()
+                        .addPhoto(photo)
+                        .build();
+                shareDialog.show(content);
+            }
+        }
+
+        @Override
+        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+        }
+
+        @Override
+        public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+        }
+    };
+
     SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
-        .setDefaultFontPath("fonts/restaurant_font.otf")
-        .setFontAttrId(R.attr.fontPath)
-        .build());
+                .setDefaultFontPath("fonts/restaurant_font.otf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_food_list);
+
+        //Init FaceBook
+        callbackManager = CallbackManager.Factory.create();
+        shareDialog = new ShareDialog(this);
 
         swipeRefreshLayout = findViewById(R.id.swipe_refresh);
 
@@ -87,8 +130,8 @@ public class FoodList extends AppCompatActivity {
             public void onRefresh() {
                 //Get Intent Here
                 if(getIntent() != null)
-                    categoryId = getIntent().getStringExtra("categoryId");
-                if(!categoryId.isEmpty())
+                    categoryId = getIntent().getStringExtra("CategoryId");
+                if(!categoryId.isEmpty() && categoryId != null)
                 {
                     if(Common.isConnectedToInternet(getBaseContext()))
                         loadFoodsList(categoryId);
@@ -106,8 +149,8 @@ public class FoodList extends AppCompatActivity {
             public void run() {
                 //Get Intent Here
                 if(getIntent() != null)
-                    categoryId = getIntent().getStringExtra("categoryId");
-                if(!categoryId.isEmpty())
+                    categoryId = getIntent().getStringExtra("CategoryId");
+                if(!categoryId.isEmpty() && categoryId != null)
                 {
                     if(Common.isConnectedToInternet(getBaseContext()))
                         loadFoodsList(categoryId);
@@ -181,6 +224,14 @@ public class FoodList extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //Fix click back on Food Detail and get no item in Food List
+        if(mAdapter != null)
+            mAdapter.startListening();
     }
 
     private void startSearch(CharSequence text) {
@@ -259,9 +310,38 @@ public class FoodList extends AppCompatActivity {
                 Picasso.get().load(model.getImage())
                         .into(holder.images);
 
+                //Quick Cart
+                holder.cart.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        new Database(getBaseContext()).addToCart(new Order(
+                                mAdapter.getRef(position).getKey(),
+                                model.getName(),
+                                "1",
+                                model.getPrice(),
+                                model.getDiscount(),
+                                model.getImage()
+                        ));
+                        Toast.makeText(FoodList.this, "Added to Cart", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+
                 //Add Favorites
                 if(localDb.isFavorites(mAdapter.getRef(position).getKey()))
                     holder.fave.setImageResource(R.drawable.ic_favorite_black_24dp);
+
+                //Click to Share
+                holder.share_btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Picasso.get()
+                                .load(model.getImage())
+                                .into(target);
+
+                        Toast.makeText(FoodList.this, "Clicked", Toast.LENGTH_SHORT).show();
+                    }
+                });
 
                 //click to change state of Favorites
                 holder.fave.setOnClickListener(new View.OnClickListener() {
@@ -306,8 +386,6 @@ public class FoodList extends AppCompatActivity {
                 return new FoodViewHolder(itemView);
             }
         };
-        //Set Adapter
-//        Log.d("TAG",""+mAdapter.getItemCount());
         mAdapter.startListening();
         mRecyclerView.setAdapter(mAdapter);
         swipeRefreshLayout.setRefreshing(false);
@@ -318,6 +396,6 @@ public class FoodList extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         mAdapter.stopListening();
-        searchAdapter.stopListening();
+//        searchAdapter.stopListening();
     }
 }

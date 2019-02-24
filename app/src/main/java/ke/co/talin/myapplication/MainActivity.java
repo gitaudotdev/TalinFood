@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.FacebookSdk;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
                 .setDefaultFontPath("fonts/restaurant_font.otf")
                 .setFontAttrId(R.attr.fontPath)
                 .build());
+        FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_main);
 
 
@@ -62,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         Paper.init(this);
 
 
-        printKeyHash();
+//        printKeyHash();
         
 
         btnSignIn.setOnClickListener(new View.OnClickListener() {
@@ -91,13 +93,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void printKeyHash() {
+//    private void printKeyHash() {
 //        try{
-//            PackageInfo info = getPackageManager().getPackageInfo("ke.co.talin.myapplication", );
+//            PackageInfo info = getPackageManager().getPackageInfo("ke.co.talin.myapplication",
+//                    PackageManager.GET_SIGNATURES);
+//            for (Signature signature: info.signatures)
+//            {
+//                MessageDigest md = MessageDigest.getInstance("SHA");
+//                md.update(signature.toByteArray());
+//                Log.d("KeyHash",Base64.encodeToString(md.digest(),Base64.DEFAULT));
+//            }
 //
+//        } catch (PackageManager.NameNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
 //        }
-
-    }
+//
+//    }
 
     private void login(final String phone, final String pwd) {
 

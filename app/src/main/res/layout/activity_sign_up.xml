@@ -82,17 +82,33 @@
 
     </LinearLayout>
 
-    <Button
+    <!--<Button-->
+        <!--android:id="@+id/btnRegister"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginRight="8dp"-->
+        <!--android:layout_marginLeft="8dp"-->
+        <!--android:layout_margin="8dp"-->
+        <!--android:background="@color/btnSignUp"-->
+        <!--android:layout_alignParentBottom="true"-->
+        <!--android:text="REGISTER"-->
+        <!--android:textColor="@android:color/white" />-->
+
+    <info.hoang8f.widget.FButton
         android:id="@+id/btnRegister"
+        android:text="REGISTER"
+        android:textColor="@android:color/white"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginRight="8dp"
         android:layout_marginLeft="8dp"
         android:layout_margin="8dp"
-        android:background="@color/btnSignUp"
         android:layout_alignParentBottom="true"
-        android:text="REGISTER"
-        android:textColor="@android:color/white" />
-
+        app:fButtonColor="@color/btnSignUp"
+        app:shadowHeight="5dp"
+        app:cornerRadius="4dp"
+        app:shadowEnabled="true"
+        android:shadowColor="@android:color/black"
+        />
 
 </RelativeLayout>

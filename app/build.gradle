@@ -8,6 +8,7 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -31,8 +32,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-database:16.0.6'
     implementation 'com.google.firebase:firebase-auth:16.1.0'
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
-    implementation 'com.firebaseui:firebase-ui-database:3.1.2'
-    implementation 'info.hoang8f:fbutton:1.0.5'
+    implementation 'com.firebaseui:firebase-ui-database:4.3.1'
+
+    implementation('com.github.jd-alexander:android-flat-button:v1.1')
     implementation 'com.rengwuxian.materialedittext:library:2.1.4'
 
     implementation 'com.cepheuen.elegant-number-button:lib:1.0.2'
@@ -50,6 +52,11 @@ dependencies {
     implementation 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
     implementation 'com.github.mancj:MaterialSearchBar:0.7.6'
 
+    //Google Services
+    implementation 'com.google.android.gms:play-services-places:16.0.0'
+    implementation 'com.google.android.gms:play-services-maps:16.1.0'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+
     //Cache
     implementation 'io.paperdb:paperdb:2.6'
     //Check box
@@ -58,6 +65,19 @@ dependencies {
     implementation 'com.stepstone.apprating:app-rating:2.0.0'
 
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
+
+    //Facebook Share
+    implementation('com.facebook.android:facebook-share:[4,5)')
+
+    implementation 'com.github.d-max:spots-dialog:0.7@aar'
+
+    //CounterFAB
+    implementation 'com.github.andremion:counterfab:1.0.1'
+
+    implementation 'com.android.support:multidex:1.0.3'
+
+    //Mpesa
+    implementation 'com.androidstudy:daraja:1.0.2'
 
 }
 apply plugin: 'com.google.gms.google-services'

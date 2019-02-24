@@ -17,20 +17,12 @@
             android:padding="16dp"
             >
 
-           <com.rengwuxian.materialedittext.MaterialEditText
-               android:id="@+id/edtAddress"
+           <fragment
+               android:id="@+id/place_autocomplete_fragment"
+               android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
                android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               android:hint="Address"
-               android:textColorHint="@color/colorPrimary"
-               android:textSize="34sp"
-               android:inputType="text"
-               android:text=""
-               android:textColor="@color/colorPrimary"
-               app:met_floatingLabel="highlight"
-               app:met_primaryColor="@color/colorPrimary"
-               app:met_singleLineEllipsis="true"
-               />
+               android:layout_height="wrap_content"/>
+
             <com.rengwuxian.materialedittext.MaterialEditText
                 android:id="@+id/edtComment"
                 android:layout_width="match_parent"
@@ -46,6 +38,21 @@
                 app:met_singleLineEllipsis="true"
                 />
 
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <RadioButton
+                    android:id="@+id/rdShipToAddress"
+                    android:text="Ship To This Address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <RadioButton
+                    android:id="@+id/rdHomeAddress"
+                    android:text="Home Address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </RadioGroup>
 
         </LinearLayout>
 

@@ -1,6 +1,8 @@
 package ke.co.talin.myapplication;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -21,18 +23,30 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.andremion.counterfab.CounterFab;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.rengwuxian.materialedittext.MaterialEditText;
 import com.squareup.picasso.Picasso;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import dmax.dialog.SpotsDialog;
 import io.paperdb.Paper;
 import ke.co.talin.myapplication.Common.Common;
+import ke.co.talin.myapplication.Database.Database;
 import ke.co.talin.myapplication.Interface.ItemClickListener;
 import ke.co.talin.myapplication.Model.Category;
 
@@ -51,6 +65,8 @@ public class HomeActivity extends AppCompatActivity
 
     RecyclerView recycler;
     RecyclerView.LayoutManager layoutManager;
+
+    CounterFab fab;
 
     SwipeRefreshLayout swipeRefreshLayout;
 
@@ -75,6 +91,7 @@ public class HomeActivity extends AppCompatActivity
 
         //View
         swipeRefreshLayout = findViewById(R.id.swipe_layout);
+
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
                 android.R.color.holo_green_dark,
                 android.R.color.holo_orange_dark,
@@ -82,7 +99,7 @@ public class HomeActivity extends AppCompatActivity
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if(!Common.isConnectedToInternet(getBaseContext()))
+                if(Common.isConnectedToInternet(getBaseContext()))
                     loadMenu();
                 else
                 {
@@ -96,7 +113,7 @@ public class HomeActivity extends AppCompatActivity
         swipeRefreshLayout.post(new Runnable() {
             @Override
             public void run() {
-                if(!Common.isConnectedToInternet(getBaseContext()))
+                if(Common.isConnectedToInternet(getBaseContext()))
                     loadMenu();
                 else
                 {
@@ -111,52 +128,6 @@ public class HomeActivity extends AppCompatActivity
         database = FirebaseDatabase.getInstance();
         category =database.getReference("Category");
 
-        Paper.init(this);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent cartIntent = new Intent(HomeActivity.this,Cart.class);
-                startActivity(cartIntent);
-            }
-        });
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        View headerview = navigationView.getHeaderView(0);
-        tvFname= headerview.findViewById(R.id.tvFullname);
-        tvFname.setText(Common.currentUser.getName());
-
-        //Load Menu
-        recycler = findViewById(R.id.recycler_menu);
-        recycler.setHasFixedSize(true);
-//        layoutManager = new LinearLayoutManager(this);
-//        recycler.setLayoutManager(layoutManager);
-        recycler.setLayoutManager(new GridLayoutManager(this,2));
-
-
-
-
-        //Send token
-        updateToken(FirebaseInstanceId.getInstance().getToken());
-    }
-
-    private void updateToken(String token) {
-        FirebaseDatabase db = FirebaseDatabase.getInstance();
-        DatabaseReference tokens = db.getReference("Tokens");
-        Token data = new Token(token,false);
-        tokens.child(Common.currentUser.getPhone()).setValue(data);
-    }
-
-    private void loadMenu() {
         FirebaseRecyclerOptions<Category> options = new FirebaseRecyclerOptions.Builder<Category>()
                 .setQuery(category,Category.class)
                 .build();
@@ -189,9 +160,76 @@ public class HomeActivity extends AppCompatActivity
                 return new MenuViewHolder(itemView);
             }
         };
+
+        Paper.init(this);
+
+        fab = (CounterFab) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent cartIntent = new Intent(HomeActivity.this,Cart.class);
+                startActivity(cartIntent);
+            }
+        });
+
+        fab.setCount(new Database(this).getCountCart());
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        View headerview = navigationView.getHeaderView(0);
+        tvFname= headerview.findViewById(R.id.tvFullname);
+        tvFname.setText(Common.currentUser.getName());
+
+        //Load Menu
+        recycler = findViewById(R.id.recycler_menu);
+        recycler.setHasFixedSize(true);
+//        layoutManager = new LinearLayoutManager(this);
+//        recycler.setLayoutManager(layoutManager);
+        recycler.setLayoutManager(new GridLayoutManager(this,2));
+        LayoutAnimationController controller = AnimationUtils.loadLayoutAnimation(recycler.getContext(),
+                R.anim.layout_fall_down);
+        recycler.setLayoutAnimation(controller);
+
+
+
+
+        //Send token
+        updateToken(FirebaseInstanceId.getInstance().getToken());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fab.setCount(new Database(this).getCountCart());
+        //Fix click back Button from Food Activity
+        if(adapter !=null)
+            adapter.startListening();
+
+    }
+
+    private void updateToken(String token) {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference tokens = db.getReference("Tokens");
+        Token data = new Token(token,false);
+        tokens.child(Common.currentUser.getPhone()).setValue(data);
+    }
+
+    private void loadMenu() {
         adapter.startListening();
         recycler.setAdapter(adapter);
         swipeRefreshLayout.setRefreshing(false);
+
+        //Animation
+        recycler.getAdapter().notifyDataSetChanged();
+        recycler.scheduleLayoutAnimation();
+
     }
 
     @Override
@@ -225,9 +263,8 @@ public class HomeActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.refresh) {
+        if (id == R.id.refresh)
             loadMenu();
-        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -256,10 +293,135 @@ public class HomeActivity extends AppCompatActivity
             Intent logIntent = new Intent(HomeActivity.this,MainActivity.class);
             logIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logIntent);
+        }else if (id== R.id.nav_change_pwd) {
+            showChangePwdDialog();
+        }else if (id == R.id.nav_home_address) {
+
+            showHomeAddressDialog();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showHomeAddressDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setTitle("CHANGE HOME ADDRESS");
+        alertDialog.setMessage("Please Fill All Information");
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View layout_home = inflater.inflate(R.layout.home_address_layout,null);
+
+        final MaterialEditText edtHomeAddress = layout_home.findViewById(R.id.edtHomeAddress);
+
+
+        alertDialog.setView(layout_home);
+
+        //Button
+        alertDialog.setPositiveButton("UPDATE", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+
+//                final AlertDialog dialog1 = new SpotsDialog(HomeActivity.this);
+//                dialog1.show();
+
+                Common.currentUser.setHomeAddress(edtHomeAddress.getText().toString());
+
+                FirebaseDatabase.getInstance().getReference("User")
+                        .child(Common.currentUser.getPhone())
+                        .setValue(Common.currentUser)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Toast.makeText(HomeActivity.this, "Home Address Update Successful!..", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+
+            }
+        });
+
+
+        alertDialog.show();
+
+
+    }
+
+    private void showChangePwdDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setTitle("CHANGE PASSWORD");
+        alertDialog.setMessage("Please Fill All Information");
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View layout_pwd = inflater.inflate(R.layout.change_password_layout,null);
+
+        final MaterialEditText edtPassword = layout_pwd.findViewById(R.id.edtPassword);
+        final MaterialEditText edtNewPassword = layout_pwd.findViewById(R.id.edtNewPassword);
+        final MaterialEditText edtRptPassword = layout_pwd.findViewById(R.id.edtRptPassword);
+
+        alertDialog.setView(layout_pwd);
+
+        //Button
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //Change Password Here
+
+                final AlertDialog dialog1 = new SpotsDialog(HomeActivity.this);
+                dialog1.show();
+
+                //Check Old Password
+                if(edtPassword.getText().toString().equals(Common.currentUser.getPassword()))
+                {
+                    //Check if new Pasword and Rpt Password are the same
+                    if(edtNewPassword.getText().toString().equals(edtRptPassword.getText().toString()))
+                    {
+                        Map<String,Object> passwordUpdate = new HashMap<>();
+                        passwordUpdate.put("password",edtNewPassword.getText().toString());
+
+                        //Make Update
+                        DatabaseReference user = FirebaseDatabase.getInstance().getReference("User");
+                        user.child(Common.currentUser.getPhone())
+                                .updateChildren(passwordUpdate)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        dialog1.dismiss();
+                                        Toast.makeText(HomeActivity.this, "Password Changed", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+                    }else
+                    {
+                        dialog1.dismiss();
+                        Toast.makeText(HomeActivity.this, "New Password Doesn't Match", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+                else
+                {
+                    dialog1.dismiss();
+                    Toast.makeText(HomeActivity.this, "Wrong Old Password", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+
     }
 }

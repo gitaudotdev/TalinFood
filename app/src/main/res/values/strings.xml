@@ -11,4 +11,7 @@
 
     <string name="forgot_pwd"><u>Forgot Password?</u></string>
 
+    <string name="facebook_app_id">185744678972834</string>
+    <string name="facebook_login_protocol_name">fb185744678972834</string>
+
 </resources>

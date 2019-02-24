@@ -1,6 +1,7 @@
 package ke.co.talin.myapplication.Model;
 
 public class Notification {
+
     public String title;
     public String body;
 

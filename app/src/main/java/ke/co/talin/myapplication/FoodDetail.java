@@ -12,6 +12,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.andremion.counterfab.CounterFab;
 import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,7 +39,8 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
     TextView food_name,food_price,food_description;
     ImageView food_image;
     CollapsingToolbarLayout mCollapsingToolbarLayout;
-    FloatingActionButton btn_cart,btnRate;
+    FloatingActionButton btnRate;
+    CounterFab btn_cart;
     ElegantNumberButton mNumberButton;
     RatingBar ratingBar;
 
@@ -109,11 +111,14 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
                         currentfood.getName(),
                         mNumberButton.getNumber(),
                         currentfood.getPrice(),
-                        currentfood.getDiscount()
+                        currentfood.getDiscount(),
+                        currentfood.getImage()
                 ));
                 Toast.makeText(FoodDetail.this, "Added to Cart", Toast.LENGTH_SHORT).show();
             }
         });
+
+        btn_cart.setCount(new Database(this).getCountCart());
 
         btnRate.setOnClickListener(new View.OnClickListener() {
             @Override

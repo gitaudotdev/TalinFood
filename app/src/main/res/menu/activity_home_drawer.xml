@@ -17,6 +17,14 @@
             android:icon="@drawable/ic_access_time_black_24dp"
             android:title="Orders" />
         <item
+            android:id="@+id/nav_change_pwd"
+            android:icon="@drawable/ic_security_black_24dp"
+            android:title="change Password"/>
+        <item
+            android:id="@+id/nav_home_address"
+            android:icon="@drawable/ic_home_black_24dp"
+            android:title="Home Address"/>
+        <item
             android:id="@+id/nav_log_out"
             android:icon="@drawable/ic_exit_to_app_black_24dp"
             android:title="Log Out" />

@@ -65,14 +65,14 @@ public class OrderStatus extends AppCompatActivity {
     }
 
     private void loadOrders(String phone) {
-        Query request = requests.orderByChild("phone").equalTo(phone);
+        Query getOrderByUser = requests.orderByChild("phone").equalTo(phone);
 
-        FirebaseRecyclerOptions<Request> requestOptions =new FirebaseRecyclerOptions.Builder<Request>()
-                .setQuery(request,Request.class)
+        FirebaseRecyclerOptions<Request> orderOptions =new FirebaseRecyclerOptions.Builder<Request>()
+                .setQuery(getOrderByUser,Request.class)
                 .build();
 
 
-        adapter = new FirebaseRecyclerAdapter<Request, OrderViewHolder>(requestOptions) {
+        adapter = new FirebaseRecyclerAdapter<Request, OrderViewHolder>(orderOptions) {
             @Override
             protected void onBindViewHolder(@NonNull OrderViewHolder viewHolder, int position, @NonNull Request model) {
                 viewHolder.txtOrderId.setText(adapter.getRef(position).getKey());

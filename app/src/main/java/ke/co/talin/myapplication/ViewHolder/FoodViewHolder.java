@@ -12,7 +12,7 @@ import ke.co.talin.myapplication.R;
 public class FoodViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
     public TextView txtfood,txtprice;
-    public ImageView images,fave;
+    public ImageView images,fave,share_btn,cart;
 
     private ItemClickListener itemClickListener;
 
@@ -23,6 +23,8 @@ public class FoodViewHolder extends RecyclerView.ViewHolder implements View.OnCl
         txtfood = itemView.findViewById(R.id.food_name);
         images = itemView.findViewById(R.id.food_image);
         fave = itemView.findViewById(R.id.fav);
+        share_btn = itemView.findViewById(R.id.btnShare);
+        cart = itemView.findViewById(R.id.btn_quick_cart);
 
         itemView.setOnClickListener(this);
     }
