@@ -27,41 +27,6 @@ import ke.co.talin.myapplication.Interface.ItemClickListener;
 import ke.co.talin.myapplication.Model.Order;
 import ke.co.talin.myapplication.R;
 
-class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnCreateContextMenuListener
-{
-
-    public TextView txt_cart_name,txt_price;
-    public ElegantNumberButton qty_count;
-    public ImageView cart_image;
-
-    private ItemClickListener mItemClickListener;
-
-    public void setItemClickListener(ItemClickListener itemClickListener) {
-        mItemClickListener = itemClickListener;
-    }
-
-    public CartViewHolder(@NonNull View itemView) {
-        super(itemView);
-        txt_cart_name = itemView.findViewById(R.id.cart_item_name);
-        txt_price = itemView.findViewById(R.id.cart_item_price);
-        qty_count = itemView.findViewById(R.id.btn_quantity);
-        cart_image = itemView.findViewById(R.id.cart_image);
-
-        itemView.setOnCreateContextMenuListener(this);
-    }
-
-    @Override
-    public void onClick(View view) {
-
-    }
-
-    @Override
-    public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
-        contextMenu.setHeaderTitle("Select action");
-        contextMenu.add(0,0,getAdapterPosition(), Common.DELETE);
-    }
-}
-
 public class CartAdapter extends RecyclerView.Adapter<CartViewHolder>  {
 
     private List<Order> mList = new ArrayList<>();
@@ -106,7 +71,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartViewHolder>  {
 //                cart.txt_total
                 //Calculate totalPrice
                 int total = 0;
-                List<Order> orders = new Database(cart).getCarts();
+                List<Order> orders = new Database(cart).getCarts(Common.currentUser.getPhone());
                 for(Order item:orders)
                     total+=(Integer.parseInt(order.getPrice()))*(Integer.parseInt(item.getQuantity()));
                 Locale locale = new Locale("en","KE");
@@ -127,6 +92,22 @@ public class CartAdapter extends RecyclerView.Adapter<CartViewHolder>  {
     @Override
     public int getItemCount() {
         return mList.size();
+    }
+
+    public Order getItem(int postion)
+    {
+        return mList.get(postion);
+    }
+
+    public void removeItem(int position) {
+        mList.remove(position);
+        notifyItemRemoved(position);
+    }
+
+    public void restoreItem(Order item,int position){
+        mList.add(position,item);
+        notifyItemInserted(position);
+
     }
 }
 

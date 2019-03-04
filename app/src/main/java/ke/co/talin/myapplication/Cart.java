@@ -5,15 +5,17 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,8 +24,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RadioButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,9 +37,7 @@ import com.androidstudy.daraja.model.LNMResult;
 import com.androidstudy.daraja.util.TransactionType;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.Api;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -45,38 +45,42 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.JsonObject;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Database.Database;
+import ke.co.talin.myapplication.Helper.RecyclerItemTouchHelper;
+import ke.co.talin.myapplication.Interface.RecyclerItemTouchHelperListener;
+import ke.co.talin.myapplication.Model.DataMessage;
 import ke.co.talin.myapplication.Model.MyResponse;
-import ke.co.talin.myapplication.Model.Notification;
 import ke.co.talin.myapplication.Model.Order;
 import ke.co.talin.myapplication.Model.Request;
-import ke.co.talin.myapplication.Model.Sender;
 import ke.co.talin.myapplication.Model.Token;
+import ke.co.talin.myapplication.Model.User;
 import ke.co.talin.myapplication.Remote.APIService;
 import ke.co.talin.myapplication.Remote.IGoogleService;
 import ke.co.talin.myapplication.ViewHolder.CartAdapter;
+import ke.co.talin.myapplication.ViewHolder.CartViewHolder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -85,8 +89,7 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class Cart extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener,
-        LocationListener
-{
+        LocationListener, RecyclerItemTouchHelperListener {
 
     private static final int LOCATION_REQUEST_CODE = 9999;
     private static final int PLAY_SERVICES_REQ_CODE = 8888;
@@ -105,8 +108,6 @@ public class Cart extends AppCompatActivity implements
     List<Order> cart = new ArrayList<>();
     CartAdapter mCartAdapter;
 
-    APIService mService;
-
     Place shippingAddress;
 
     //Location
@@ -120,6 +121,10 @@ public class Cart extends AppCompatActivity implements
 
     //Declare Google MAp API
     IGoogleService mGoogleService;
+    APIService mService;
+
+    RelativeLayout rootLayout;
+
 
     //Mpesa
     Daraja daraja;
@@ -141,6 +146,8 @@ public class Cart extends AppCompatActivity implements
         //Init
         mGoogleService = Common.getGoogleMapService();
 
+        rootLayout = findViewById(R.id.rootLayout);
+
         //Runtime Permission
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -158,7 +165,6 @@ public class Cart extends AppCompatActivity implements
             }
         }
 
-
         mDatabase = FirebaseDatabase.getInstance();
         requests = mDatabase.getReference("Requests");
 
@@ -170,6 +176,10 @@ public class Cart extends AppCompatActivity implements
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
+
+        //Swipe to Delete
+        ItemTouchHelper.SimpleCallback itemTouchCallback = new RecyclerItemTouchHelper(0,ItemTouchHelper.LEFT,this);
+        new ItemTouchHelper(itemTouchCallback).attachToRecyclerView(mRecyclerView);
 
         txt_total = findViewById(R.id.txt_total);
         btnOrder = findViewById(R.id.btnPlaceOrder);
@@ -253,7 +263,7 @@ public class Cart extends AppCompatActivity implements
         // remove item from List<Order> by position
         cart.remove(position);
         //After that, we will delete all old data from SQLite
-        new Database(this).cleanCart();
+        new Database(this).cleanCart(Common.currentUser.getPhone());
         //And final we will update new Data from List<Order> to SQLite
         for(Order item:cart)
             new Database(this).addToCart(item);
@@ -301,6 +311,9 @@ public class Cart extends AppCompatActivity implements
         //Radio
         final RadioButton rdiShipToAddress = order_address_comment.findViewById(R.id.rdShipToAddress);
         final RadioButton rdiHmeAddress = order_address_comment.findViewById(R.id.rdHomeAddress);
+        final RadioButton rdiMpesa = order_address_comment.findViewById(R.id.rdiMpesa);
+        final RadioButton rdiCOD = order_address_comment.findViewById(R.id.rdCOd);
+        final RadioButton rdiBalance = order_address_comment.findViewById(R.id.rdiBalance);
 
         //Event for Radio Buttons
         rdiHmeAddress.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -316,7 +329,7 @@ public class Cart extends AppCompatActivity implements
                     else {
                         Toast.makeText(Cart.this, "Please Update Your Home Address", Toast.LENGTH_SHORT).show();
                     }
-                       
+
                 }
             }
         });
@@ -400,38 +413,54 @@ public class Cart extends AppCompatActivity implements
                 }
                 comment = edtComment.getText().toString();
 
-                daraja = Daraja.with(Common.Consumer_KEY, Common.Consumer_SECRET, new DarajaListener<AccessToken>() {
-                    @Override
-                    public void onResult(@NonNull AccessToken accessToken) {
+                //Check Payment
+                if(!rdiCOD.isChecked() && !rdiCOD.isChecked() && !rdiBalance.isChecked()) //if both cod and paypal and Balance is not checked
+                {
+                    Toast.makeText(Cart.this, "Please  Select an Payment Option", Toast.LENGTH_SHORT).show();
 
-                    }
+                    //Fix Crash Fragment
+                    getFragmentManager().beginTransaction()
+                            .remove(getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment))
+                            .commit();
 
-                    @Override
-                    public void onError(String error) {
+                    return;
+                }else if(!rdiMpesa.isChecked() && !rdiMpesa.isChecked())
+                {
+                    daraja = Daraja.with(Common.Consumer_KEY, Common.Consumer_SECRET, new DarajaListener<AccessToken>() {
+                        @Override
+                        public void onResult(@NonNull AccessToken accessToken) {
+//                        Log.i(Cart.this.getClass().getSimpleName(), accessToken.getAccess_token());
+//                        Toast.makeText(Cart.this, "TOKEN : " + accessToken.getAccess_token(), Toast.LENGTH_SHORT).show();
+                        }
 
-                    }
-                });
+                        @Override
+                        public void onError(String error) {
+                            Toast.makeText(Cart.this, ""+error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
-                final LNMExpress lnmExpress = new LNMExpress(
-                        "174379",
-                        "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",  //https://developer.safaricom.co.ke/test_credentials
-                        TransactionType.CustomerBuyGoodsOnline, // TransactionType.CustomerPayBillOnline  <- Apply any of these two
-                        txt_total.getText().toString(),
-                        "254708374149",
-                        "174379",
-                        Common.currentUser.getPhone(),
-                        "http://mycallbackurl.com/checkout.php",
-                        "001ABC",
-                        "Goods Payment"
-                );
 
-                daraja.requestMPESAExpress(
-                        lnmExpress, new DarajaListener<LNMResult>() {
-                            @Override
-                            public void onResult(@NonNull LNMResult lnmResult) {
 
-                                if(lnmResult.ResponseDescription.equals("success"))
-                                {
+                    final LNMExpress lnmExpress = new LNMExpress(
+                            "174379",
+                            "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",  //https://developer.safaricom.co.ke/test_credentials
+                            TransactionType.CustomerBuyGoodsOnline, // TransactionType.CustomerPayBillOnline  <- Apply any of these two
+                            txt_total.getText().toString(),
+                            "254708374149",
+                            "174379",
+                            Common.currentUser.getPhone(),
+                            "http://mycallbackurl.com/checkout.php",
+                            "001ABC",
+                            "Goods Payment"
+                    );
+
+                    daraja.requestMPESAExpress(
+                            lnmExpress, new DarajaListener<LNMResult>() {
+                                @Override
+                                public void onResult(@NonNull LNMResult lnmResult) {
+
+//                                if(lnmResult.ResponseDescription.equals("success"))
+//                                {
                                     //Create New Request
                                     Request request = new Request(
                                             Common.currentUser.getPhone(),
@@ -440,6 +469,7 @@ public class Cart extends AppCompatActivity implements
                                             txt_total.getText().toString(),
                                             "0",
                                             comment,
+                                            "Mpesa",
                                             lnmResult.ResponseDescription,
                                             String.format("%s,%s",shippingAddress.getLatLng().latitude,shippingAddress.getLatLng().longitude),
                                             cart
@@ -451,27 +481,133 @@ public class Cart extends AppCompatActivity implements
                                             .setValue(request);
 
                                     //Delete Cart
-                                    new Database(getBaseContext()).cleanCart();
+                                    new Database(getBaseContext()).cleanCart(Common.currentUser.getPhone());
 
                                     sendNotificationOrder(order_number);
 
                                     Toast.makeText(Cart.this, "Thank You ,For Placing Your Order", Toast.LENGTH_SHORT).show();
                                     finish();
-                                }else
-                                {
+//
+
 
                                 }
 
-
+                                @Override
+                                public void onError(String error) {
+                                    Toast.makeText(Cart.this, ""+error, Toast.LENGTH_SHORT).show();
+                                }
                             }
+                    );
+                }else if (rdiCOD.isChecked())
+                {
 
-                            @Override
-                            public void onError(String error) {
-                                Toast.makeText(Cart.this, ""+error, Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                );
+                    //Create New Request
+                    Request request = new Request(
+                            Common.currentUser.getPhone(),
+                            Common.currentUser.getName(),
+                            address,
+                            txt_total.getText().toString(),
+                            "0",
+                            comment,
+                            "COD",
+                            "Unpaid",
+                            String.format("%s,%s",mLastLocation.getLatitude(),mLastLocation.getLongitude()), //coordinates wen user makes order
+                            cart
+                    );
+                    //submit to Firebase
+                    //we will use system.CurrentMilli as unique identifier
+                    String order_number = String.valueOf(System.currentTimeMillis());
+                    requests.child(String.valueOf(System.currentTimeMillis()))
+                            .setValue(request);
 
+                    //Delete Cart
+                    new Database(getBaseContext()).cleanCart(Common.currentUser.getPhone());
+
+                    sendNotificationOrder(order_number);
+
+                    Toast.makeText(Cart.this, "Thank You ,For Placing Your Order", Toast.LENGTH_SHORT).show();
+                    finish();
+                }else if (rdiBalance.isChecked())
+                {
+                    double amount = 0;
+                    //First we will get Total Price from txtTotal
+                    try {
+                        amount = Common.formatCurrency(txt_total.getText().toString(),Locale.US).doubleValue();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+                    //After we receive tota; of this order,just compare with user balance
+                    if (Double.parseDouble(Common.currentUser.getBalance().toString()) >= amount)
+                    {
+                        //Create New Request
+                        Request request = new Request(
+                                Common.currentUser.getPhone(),
+                                Common.currentUser.getName(),
+                                address,
+                                txt_total.getText().toString(),
+                                "0",
+                                comment,
+                                "Talin's Balance",
+                                "Paid",
+                                String.format("%s,%s",mLastLocation.getLatitude(),mLastLocation.getLongitude()), //coordinates wen user makes order
+                                cart
+                        );
+                        //submit to Firebase
+                        //we will use system.CurrentMilli as unique identifier
+                        final String order_number = String.valueOf(System.currentTimeMillis());
+                        requests.child(String.valueOf(System.currentTimeMillis()))
+                                .setValue(request);
+
+                        //Delete Cart
+                        new Database(getBaseContext()).cleanCart(Common.currentUser.getPhone());
+
+                        //Update Balance
+                        double balance =Double.parseDouble(Common.currentUser.getBalance().toString())  - amount;
+                        Map<String,Object> update_balance = new HashMap<>();
+                        update_balance.put("balance",balance);
+
+                        FirebaseDatabase.getInstance()
+                                .getReference("User")
+                                .child(Common.currentUser.getPhone())
+                                .updateChildren(update_balance)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        //If Task is successful
+                                        if (task.isSuccessful())
+                                        {
+                                            //Refresh User
+                                            FirebaseDatabase.getInstance()
+                                                    .getReference("User")
+                                                    .child(Common.currentUser.getPhone())
+                                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                                            Common.currentUser = dataSnapshot.getValue(User.class);
+                                                            //Send Order to Server
+                                                            sendNotificationOrder(order_number);
+
+                                                        }
+
+                                                        @Override
+                                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                                        }
+                                                    });
+                                        }
+
+                                    }
+                                });
+
+                        Toast.makeText(Cart.this, "Thank You ,For Placing Your Order", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                    else
+                    {
+                        Toast.makeText(Cart.this, "Your Balance is not Enough Please choose other Payment", Toast.LENGTH_SHORT).show();
+                    }
+                }
 
 
                 //Remove Fragment
@@ -510,10 +646,17 @@ public class Cart extends AppCompatActivity implements
                     serverToken = snapshot.getValue(Token.class);
 
                     //Create raw payload
-                    Notification notification = new Notification("CodeBender","You Have a new Order"+order_number);
-                    Sender content = new Sender(serverToken.getToken(),notification);
+//                    Notification notification = new Notification("CodeBender","You Have a new Order"+order_number);
+//                    Sender content = new Sender(serverToken.getToken(),notification);
 
-                    mService.sendNotification(content)
+                    Map<String,String> dataSend = new HashMap<>();
+                    dataSend.put("title","CodeBender");
+                    dataSend.put("message","You Have a new Order"+order_number);
+                    DataMessage dataMessage = new DataMessage(serverToken.getToken(),dataSend);
+
+
+
+                    mService.sendNotification(dataMessage)
                             .enqueue(new Callback<MyResponse>() {
                                 @Override
                                 public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
@@ -544,7 +687,7 @@ public class Cart extends AppCompatActivity implements
     }
 
     private void LoadListFood() {
-        cart = new Database(this).getCarts();
+        cart = new Database(this).getCarts(Common.currentUser.getPhone());
         mCartAdapter = new CartAdapter(cart,this);
         mCartAdapter.notifyDataSetChanged();
         mRecyclerView.setAdapter(mCartAdapter);
@@ -608,5 +751,53 @@ public class Cart extends AppCompatActivity implements
     public void onLocationChanged(Location location) {
         mLastLocation = location;
         displayLocation();
+    }
+
+    @Override
+    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
+        if (viewHolder instanceof CartViewHolder)
+        {
+            String name =((CartAdapter)mRecyclerView.getAdapter()).getItem(viewHolder.getAdapterPosition()).getProductName();
+
+            final Order deleteItem =((CartAdapter) mRecyclerView.getAdapter()).getItem(viewHolder.getAdapterPosition());
+
+            final int deleteIndex = viewHolder.getAdapterPosition();
+
+            mCartAdapter.removeItem(deleteIndex);
+
+            new Database(getBaseContext()).removeFromCart(deleteItem.getProductId(),Common.currentUser.getPhone());
+
+            //calculate Total Price
+            int total = 0;
+            List<Order> orders = new Database(getBaseContext()).getCarts(Common.currentUser.getPhone());
+            for(Order item:orders)
+                total+=(Integer.parseInt(item.getPrice()))*(Integer.parseInt(item.getQuantity()));
+            Locale locale = new Locale("en","KE");
+            NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
+
+            txt_total.setText(fmt.format(total));
+
+            //Make SnackBar
+            Snackbar snackbar = Snackbar.make(rootLayout,name+"removed From Cart",Snackbar.LENGTH_LONG);
+            snackbar.setAction("UNDO", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mCartAdapter.restoreItem(deleteItem,deleteIndex);
+                    new Database(getBaseContext()).addToCart(deleteItem);
+
+                    //calculate Total Price
+                    int total = 0;
+                    List<Order> orders = new Database(getBaseContext()).getCarts(Common.currentUser.getPhone());
+                    for(Order item:orders)
+                        total+=(Integer.parseInt(item.getPrice()))*(Integer.parseInt(item.getQuantity()));
+                    Locale locale = new Locale("en","KE");
+                    NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
+
+                    txt_total.setText(fmt.format(total));
+                }
+            });
+            snackbar.setActionTextColor(Color.YELLOW);
+            snackbar.show();
+        }
     }
 }

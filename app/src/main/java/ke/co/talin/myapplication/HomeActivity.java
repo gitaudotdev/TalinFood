@@ -6,12 +6,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.multidex.MultiDex;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -25,18 +24,28 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.andremion.counterfab.CounterFab;
+import com.daimajia.slider.library.Animations.DescriptionAnimation;
+import com.daimajia.slider.library.SliderLayout;
+import com.daimajia.slider.library.SliderTypes.BaseSliderView;
+import com.daimajia.slider.library.SliderTypes.TextSliderView;
+import com.facebook.accountkit.AccountKit;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.squareup.picasso.Picasso;
 
@@ -48,6 +57,7 @@ import io.paperdb.Paper;
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Database.Database;
 import ke.co.talin.myapplication.Interface.ItemClickListener;
+import ke.co.talin.myapplication.Model.Banners;
 import ke.co.talin.myapplication.Model.Category;
 
 import ke.co.talin.myapplication.Model.Token;
@@ -72,9 +82,14 @@ public class HomeActivity extends AppCompatActivity
 
     FirebaseRecyclerAdapter<Category,MenuViewHolder> adapter;
 
+    //Slider
+    HashMap<String,String> image_list;
+    SliderLayout mslider;
+
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+
     }
 
     @Override
@@ -88,6 +103,8 @@ public class HomeActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("MENU");
         setSupportActionBar(toolbar);
+
+
 
         //View
         swipeRefreshLayout = findViewById(R.id.swipe_layout);
@@ -136,7 +153,7 @@ public class HomeActivity extends AppCompatActivity
             @Override
             protected void onBindViewHolder(@NonNull MenuViewHolder holder, int position, @NonNull Category model) {
                 holder.txtmenu.setText(model.getName());
-                Picasso.get()
+                Picasso.with(getBaseContext())
                         .load(model.getImage())
                         .into(holder.images);
                 final Category clickItem = model;
@@ -172,7 +189,7 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
-        fab.setCount(new Database(this).getCountCart());
+        fab.setCount(new Database(this).getCountCart(Common.currentUser.getPhone()));
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -198,16 +215,80 @@ public class HomeActivity extends AppCompatActivity
         recycler.setLayoutAnimation(controller);
 
 
+        //setup Slider
+        //Need call this function after init database
+        setupSlider();
 
 
         //Send token
         updateToken(FirebaseInstanceId.getInstance().getToken());
     }
 
+    private void setupSlider() {
+        mslider = findViewById(R.id.slider);
+        image_list= new HashMap<>();
+
+        final DatabaseReference banner = database.getReference("Banner");
+
+        banner.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
+                {
+                    Banners banners = postSnapshot.getValue(Banners.class);
+                    //we will concat string name and id
+                    //PIZZA_01 => and use Pizza to show description, 01 for food id to click
+                    image_list.put(banners.getName()+"@@@"+banners.getId(),banners.getImage());
+                }
+                for(String key:image_list.keySet())
+                {
+                    String[] keySplit = key.split("@@@");
+                    String nameOfFood = keySplit[0];
+                    String idOfFood = keySplit[1];
+
+                    //Create slider
+                    final TextSliderView textSliderView = new TextSliderView(getBaseContext());
+                    textSliderView.description(nameOfFood)
+                            .image(image_list.get(key))
+                            .setScaleType(BaseSliderView.ScaleType.Fit)
+                            .setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
+                                @Override
+                                public void onSliderClick(BaseSliderView slider) {
+
+                                    Intent intent = new Intent(HomeActivity.this,FoodDetail.class);
+                                    //send Food id to FoodDetail
+                                    intent.putExtras(textSliderView.getBundle());
+                                    startActivity(intent);
+                                }
+                            });
+                    //Add Extra bundle
+                    textSliderView.bundle(new Bundle());
+                    textSliderView.getBundle().putString("FoodId",idOfFood);
+
+                    mslider.addSlider(textSliderView);
+
+                    //Remove event after we're finished
+                    banner.removeEventListener(this);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+        mslider.setPresetTransformer(SliderLayout.Transformer.Background2Foreground);
+        mslider.setPresetIndicator(SliderLayout.PresetIndicators.Center_Bottom);
+        mslider.setCustomAnimation(new DescriptionAnimation());
+        mslider.setDuration(4000);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        fab.setCount(new Database(this).getCountCart());
+        fab.setCount(new Database(this).getCountCart(Common.currentUser.getPhone()));
         //Fix click back Button from Food Activity
         if(adapter !=null)
             adapter.startListening();
@@ -236,6 +317,7 @@ public class HomeActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         adapter.stopListening();
+        mslider.stopAutoCycle();
     }
 
     @Override
@@ -263,8 +345,8 @@ public class HomeActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.refresh)
-            loadMenu();
+        if (id == R.id.menu_search)
+            startActivity(new Intent(HomeActivity.this,SearchActivity.class));
 
         return super.onOptionsItemSelected(item);
     }
@@ -288,21 +370,76 @@ public class HomeActivity extends AppCompatActivity
         } else if (id == R.id.nav_log_out) {
 
             //Delete remember user and password
-            Paper.book().destroy();
+            AccountKit.logOut();
 
             Intent logIntent = new Intent(HomeActivity.this,MainActivity.class);
             logIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logIntent);
-        }else if (id== R.id.nav_change_pwd) {
+        }else if (id== R.id.nav_update_name) {
             showChangePwdDialog();
         }else if (id == R.id.nav_home_address) {
 
             showHomeAddressDialog();
+        }else if (id==R.id.nav_settings)
+        {
+            showSettingsDialog();
+        }else if (id == R.id.nav_fave)
+        {
+            startActivity(new Intent(HomeActivity.this,FavoritesActivity.class));
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showSettingsDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setTitle("SETTINGS");
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View layout_settings = inflater.inflate(R.layout.settings_layout,null);
+
+        final CheckBox chk_subscribe = layout_settings.findViewById(R.id.chk_news);
+
+        //Code to remember state of CheckBox
+        Paper.init(this);
+        String isSubscribe = Paper.book().read("sub_news");
+        if(isSubscribe == null || TextUtils.isEmpty(isSubscribe) || isSubscribe.equals("false"))
+            chk_subscribe.setChecked(false);
+        else
+            chk_subscribe.setChecked(true);
+
+
+        alertDialog.setView(layout_settings);
+
+        //Button
+        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                if (chk_subscribe.isChecked())
+                {
+                    FirebaseMessaging.getInstance().subscribeToTopic(Common.topicName);
+                    //Write Value
+                    Paper.book().write("sub_new","true");
+                }else
+                {
+                    FirebaseMessaging.getInstance().subscribeToTopic(Common.topicName);
+                    Paper.book().write("sub_new","false");
+                }
+
+
+
+
+
+
+            }
+        });
+
+
+        alertDialog.show();
     }
 
     private void showHomeAddressDialog() {
@@ -351,20 +488,19 @@ public class HomeActivity extends AppCompatActivity
 
     private void showChangePwdDialog() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setTitle("CHANGE PASSWORD");
+        alertDialog.setTitle("CHANGE NAME");
         alertDialog.setMessage("Please Fill All Information");
 
         LayoutInflater inflater = LayoutInflater.from(this);
-        View layout_pwd = inflater.inflate(R.layout.change_password_layout,null);
+        View layout_name = inflater.inflate(R.layout.update_name_layout,null);
 
-        final MaterialEditText edtPassword = layout_pwd.findViewById(R.id.edtPassword);
-        final MaterialEditText edtNewPassword = layout_pwd.findViewById(R.id.edtNewPassword);
-        final MaterialEditText edtRptPassword = layout_pwd.findViewById(R.id.edtRptPassword);
+        final MaterialEditText edtName = layout_name.findViewById(R.id.edt_name);
 
-        alertDialog.setView(layout_pwd);
+
+        alertDialog.setView(layout_name);
 
         //Button
-        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        alertDialog.setPositiveButton("UPDATE", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 //Change Password Here
@@ -372,49 +508,29 @@ public class HomeActivity extends AppCompatActivity
                 final AlertDialog dialog1 = new SpotsDialog(HomeActivity.this);
                 dialog1.show();
 
-                //Check Old Password
-                if(edtPassword.getText().toString().equals(Common.currentUser.getPassword()))
-                {
-                    //Check if new Pasword and Rpt Password are the same
-                    if(edtNewPassword.getText().toString().equals(edtRptPassword.getText().toString()))
-                    {
-                        Map<String,Object> passwordUpdate = new HashMap<>();
-                        passwordUpdate.put("password",edtNewPassword.getText().toString());
+                //Update Name
+                Map<String,Object> update_name= new HashMap<>();
+                update_name.put("name",edtName.getText().toString());
 
-                        //Make Update
-                        DatabaseReference user = FirebaseDatabase.getInstance().getReference("User");
-                        user.child(Common.currentUser.getPhone())
-                                .updateChildren(passwordUpdate)
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        dialog1.dismiss();
-                                        Toast.makeText(HomeActivity.this, "Password Changed", Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                });
+                FirebaseDatabase.getInstance()
+                        .getReference("User")
+                        .child(Common.currentUser.getPhone())
+                        .updateChildren(update_name)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                dialog1.dismiss();
+                                if (task.isSuccessful())
+                                    Toast.makeText(HomeActivity.this, "Name Was Updated", Toast.LENGTH_SHORT).show();
+                            }
+                        });
 
-                    }else
-                    {
-                        dialog1.dismiss();
-                        Toast.makeText(HomeActivity.this, "New Password Doesn't Match", Toast.LENGTH_SHORT).show();
-                    }
 
-                }
-                else
-                {
-                    dialog1.dismiss();
-                    Toast.makeText(HomeActivity.this, "Wrong Old Password", Toast.LENGTH_SHORT).show();
-                }
+
             }
         });
 
-        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        alertDialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();

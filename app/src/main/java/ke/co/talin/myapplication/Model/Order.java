@@ -1,7 +1,7 @@
 package ke.co.talin.myapplication.Model;
 
 public class Order {
-    private int ID;
+    private String userPhone;
     private String ProductId;
     private String ProductName;
     private String Quantity;
@@ -12,7 +12,8 @@ public class Order {
     public Order() {
     }
 
-    public Order(String productId, String productName, String quantity, String price, String discount, String image) {
+    public Order(String userPhone, String productId, String productName, String quantity, String price, String discount, String image) {
+        this.userPhone = userPhone;
         ProductId = productId;
         ProductName = productName;
         Quantity = quantity;
@@ -21,22 +22,12 @@ public class Order {
         Image = image;
     }
 
-    public Order(int ID, String productId, String productName, String quantity, String price, String discount, String image) {
-        this.ID = ID;
-        ProductId = productId;
-        ProductName = productName;
-        Quantity = quantity;
-        Price = price;
-        Discount = discount;
-        Image = image;
+    public String getUserPhone() {
+        return userPhone;
     }
 
-    public int getID() {
-        return ID;
-    }
-
-    public void setID(int ID) {
-        this.ID = ID;
+    public void setUserPhone(String userPhone) {
+        this.userPhone = userPhone;
     }
 
     public String getProductId() {

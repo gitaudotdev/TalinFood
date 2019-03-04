@@ -1,6 +1,7 @@
 package ke.co.talin.myapplication;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -14,6 +15,8 @@ import android.widget.Toast;
 
 import com.andremion.counterfab.CounterFab;
 import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,6 +29,7 @@ import com.stepstone.apprating.listener.RatingDialogListener;
 
 import java.util.Arrays;
 
+import info.hoang8f.widget.FButton;
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Database.Database;
 import ke.co.talin.myapplication.Model.Food;
@@ -44,6 +48,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
     ElegantNumberButton mNumberButton;
     RatingBar ratingBar;
 
+    FButton comments;
 
     String foodId="";
 
@@ -82,10 +87,22 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
         btnRate = findViewById(R.id.btn_rating);
         ratingBar = findViewById(R.id.ratingBar);
 
+        comments = findViewById(R.id.btnShowComments);
+
         mCollapsingToolbarLayout = findViewById(R.id.collapsing);
         mCollapsingToolbarLayout.setExpandedTitleTextAppearance(R.style.ExpandedAppbar);
         mCollapsingToolbarLayout.setCollapsedTitleTextAppearance(R.style.CollapsedAppbar);
 
+
+        //Event
+        comments.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(FoodDetail.this,ViewComments.class);
+                intent.putExtra(Common.INTENT_FOOD_ID,foodId);
+                startActivity(intent);
+            }
+        });
 
         //Get Food Id from Intent
         if(getIntent() !=null)
@@ -107,6 +124,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
             @Override
             public void onClick(View view) {
                 new Database(getBaseContext()).addToCart(new Order(
+                        Common.currentUser.getPhone(),
                         foodId,
                         currentfood.getName(),
                         mNumberButton.getNumber(),
@@ -118,7 +136,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
             }
         });
 
-        btn_cart.setCount(new Database(this).getCountCart());
+        btn_cart.setCount(new Database(this).getCountCart(Common.currentUser.getPhone()));
 
         btnRate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -214,6 +232,17 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
                 foodId,
                 String.valueOf(value),comments);
 
+        //Fix User can rate multiple Times
+        ratingDb.push()
+                .setValue(rating)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        Toast.makeText(FoodDetail.this, "Thank you For Your Feedback", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+/*
         ratingDb.child(Common.currentUser.getPhone())
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -238,6 +267,6 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
 
                     }
                 });
-
+*/
     }
 }

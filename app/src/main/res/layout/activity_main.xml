@@ -31,30 +31,17 @@
 
     <LinearLayout
         android:orientation="horizontal"
-        android:weightSum="2"
+        android:weightSum="1"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
 
-        <info.hoang8f.widget.FButton
-            android:id="@+id/btnSignUp"
-            android:text="SIGN Up"
-            android:textColor="@android:color/white"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:fButtonColor= "@color/btnSignUp"
-            android:shadowColor="@android:color/black"
-            app:shadowEnabled="true"
-            app:shadowHeight="5dp"
-            app:cornerRadius="5dp"
-             />
+
 
         <info.hoang8f.widget.FButton
-            android:id="@+id/btnSignIn"
-            android:text="SIGN IN"
+            android:id="@+id/btn_continue"
+            android:text="CONTINUE"
             android:textColor="@android:color/white"
             android:layout_weight="1"
             android:layout_width="0dp"

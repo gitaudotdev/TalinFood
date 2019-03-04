@@ -13,17 +13,25 @@
             android:icon="@drawable/ic_shopping_cart_black_24dp"
             android:title="Cart" />
         <item
+            android:id="@+id/nav_fave"
+            android:icon="@drawable/ic_favorite_black_24dp"
+            android:title="Favorites" />
+        <item
             android:id="@+id/nav_orders"
             android:icon="@drawable/ic_access_time_black_24dp"
             android:title="Orders" />
         <item
-            android:id="@+id/nav_change_pwd"
+            android:id="@+id/nav_update_name"
             android:icon="@drawable/ic_security_black_24dp"
-            android:title="change Password"/>
+            android:title="Update Name"/>
         <item
             android:id="@+id/nav_home_address"
             android:icon="@drawable/ic_home_black_24dp"
             android:title="Home Address"/>
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings_black_24dp"
+            android:title="Settings"/>
         <item
             android:id="@+id/nav_log_out"
             android:icon="@drawable/ic_exit_to_app_black_24dp"

@@ -26,18 +26,11 @@ public class SignUp extends AppCompatActivity {
     MaterialEditText etphone,etpass,etname,edtSecureCode;
     Button btnreg;
 
-    @Override
-    protected void attachBaseContext(Context newBase) {
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
-    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
-                .setDefaultFontPath("fonts/restaurant_font.otf")
-                .setFontAttrId(R.attr.fontPath)
-                .build());
         setContentView(R.layout.activity_sign_up);
 
         etphone = findViewById(R.id.etPhone);
@@ -59,6 +52,7 @@ public class SignUp extends AppCompatActivity {
 
                     final ProgressDialog dialog = new ProgressDialog(SignUp.this);
                     dialog.setMessage("Please Wait...");
+                    dialog.setCanceledOnTouchOutside(false);
                     dialog.show();
 
 
@@ -73,6 +67,7 @@ public class SignUp extends AppCompatActivity {
                                 dialog.dismiss();
 
                                 User user = new User(etname.getText().toString(), etpass.getText().toString(),edtSecureCode.getText().toString());
+                                user.setBalance(0.0);
 
                                 user_tbl.child(etphone.getText().toString()).setValue(user);
 

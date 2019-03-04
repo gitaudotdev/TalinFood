@@ -7,6 +7,7 @@ public class User {
     private String IsStaff;
     private String secureCode;
     private String homeAddress;
+    private Object balance;
 
 
     public User() {
@@ -17,6 +18,14 @@ public class User {
         this.password = password;
         IsStaff ="false";
         this.secureCode = secureCode;
+    }
+
+    public Object getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Object balance) {
+        this.balance = balance;
     }
 
     public String getName() {

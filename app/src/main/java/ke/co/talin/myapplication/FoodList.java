@@ -39,6 +39,7 @@ import java.util.List;
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Database.Database;
 import ke.co.talin.myapplication.Interface.ItemClickListener;
+import ke.co.talin.myapplication.Model.Favorites;
 import ke.co.talin.myapplication.Model.Food;
 import ke.co.talin.myapplication.Model.Order;
 import ke.co.talin.myapplication.ViewHolder.FoodViewHolder;
@@ -62,7 +63,7 @@ public class FoodList extends AppCompatActivity {
     List<String> suggestList = new ArrayList<>();
     MaterialSearchBar mSearchBar;
 
-    //Favorites
+    //FavoritesActivity
     Database localDb;
 
     //Facebook Share
@@ -160,6 +161,59 @@ public class FoodList extends AppCompatActivity {
                         return;
                     }
                 }
+                //Search function needs category so i'll paste the search code here
+                //Search
+                mSearchBar = findViewById(R.id.searchBar);
+                mSearchBar.setHint("Enter Your Food");
+                //mSearchBar.setSpeechMode(false);
+                loadSuggestionList();
+                mSearchBar.setCardViewElevation(10);
+                mSearchBar.addTextChangeListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                        //when user types their text , we will change the suggestion list
+
+                        List<String> suggest = new ArrayList<String>();
+                        for(String search:suggestList) //loop in suggestion list
+                        {
+                            if(search.toLowerCase().contains(mSearchBar.getText().toLowerCase()))
+                                suggest.add(search);
+                        }
+                        mSearchBar.setLastSuggestions(suggest);
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) {
+
+                    }
+                });
+                mSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
+                    @Override
+                    public void onSearchStateChanged(boolean enabled) {
+                        //when Search bar is closed
+                        //return original suggest adapter
+                        if(!enabled)
+                            mRecyclerView.setAdapter(mAdapter);
+                    }
+
+                    @Override
+                    public void onSearchConfirmed(CharSequence text) {
+                        //when search is finished
+                        //show result
+                        startSearch(text);
+                    }
+
+                    @Override
+                    public void onButtonClicked(int buttonCode) {
+
+                    }
+                });
+
             }
         });
 
@@ -167,62 +221,6 @@ public class FoodList extends AppCompatActivity {
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-
-
-
-
-        //Search
-        mSearchBar = findViewById(R.id.searchBar);
-        mSearchBar.setHint("Enter Your Food");
-//        mSearchBar.setSpeechMode(false);
-        loadSuggestionList();
-        mSearchBar.setLastSuggestions(suggestList);
-        mSearchBar.setCardViewElevation(10);
-        mSearchBar.addTextChangeListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                //when user types their text , we will change the suggestion list
-
-                List<String> suggest = new ArrayList<String>();
-                for(String search:suggestList) //loop in suggestion list
-                {
-                    if(search.toLowerCase().contains(mSearchBar.getText().toLowerCase()))
-                        suggest.add(search);
-                }
-                mSearchBar.setLastSuggestions(suggest);
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-        mSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
-            @Override
-            public void onSearchStateChanged(boolean enabled) {
-                //when Search bar is closed
-                //return original suggest adapter
-                if(!enabled)
-                    mRecyclerView.setAdapter(mAdapter);
-            }
-
-            @Override
-            public void onSearchConfirmed(CharSequence text) {
-                //when search is finished
-                //show result
-                startSearch(text);
-            }
-
-            @Override
-            public void onButtonClicked(int buttonCode) {
-
-            }
-        });
 
     }
 
@@ -285,6 +283,8 @@ public class FoodList extends AppCompatActivity {
                             suggestList.add(item.getName()); //Add name of foods to suggestions list
 
                         }
+
+                        mSearchBar.setLastSuggestions(suggestList);
                     }
 
                     @Override
@@ -311,24 +311,36 @@ public class FoodList extends AppCompatActivity {
                         .into(holder.images);
 
                 //Quick Cart
+
                 holder.cart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        new Database(getBaseContext()).addToCart(new Order(
-                                mAdapter.getRef(position).getKey(),
-                                model.getName(),
-                                "1",
-                                model.getPrice(),
-                                model.getDiscount(),
-                                model.getImage()
-                        ));
+                        boolean isExists = new Database(getBaseContext()).checkFoodExists(mAdapter.getRef(position).getKey(),Common.currentUser.getPhone());
+
+                        if (!isExists) {
+
+                            new Database(getBaseContext()).addToCart(new Order(
+                                    Common.currentUser.getPhone(),
+                                    mAdapter.getRef(position).getKey(),
+                                    model.getName(),
+                                    "1",
+                                    model.getPrice(),
+                                    model.getDiscount(),
+                                    model.getImage()
+                            ));
+
+                        } else {
+                            new Database(getBaseContext()).increaseCart(Common.currentUser.getPhone(), mAdapter.getRef(position).getKey());
+                        }
+
                         Toast.makeText(FoodList.this, "Added to Cart", Toast.LENGTH_SHORT).show();
 
                     }
                 });
 
-                //Add Favorites
-                if(localDb.isFavorites(mAdapter.getRef(position).getKey()))
+
+                //Add FavoritesActivity
+                if(localDb.isFavorites(mAdapter.getRef(position).getKey(),Common.currentUser.getPhone()))
                     holder.fave.setImageResource(R.drawable.ic_favorite_black_24dp);
 
                 //Click to Share
@@ -343,22 +355,33 @@ public class FoodList extends AppCompatActivity {
                     }
                 });
 
-                //click to change state of Favorites
+                //click to change state of FavoritesActivity
                 holder.fave.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if(!localDb.isFavorites(mAdapter.getRef(position).getKey()))
+
+                        Favorites favorites = new Favorites();
+                        favorites.setFoodId(mAdapter.getRef(position).getKey());
+                        favorites.setFoodName(model.getName());
+                        favorites.setFoodDescription(model.getDescription());
+                        favorites.setFoodDiscount(model.getDiscount());
+                        favorites.setFoodImage(model.getImage());
+                        favorites.setFoodMenuId(model.getMenuId());
+                        favorites.setUserPhone(Common.currentUser.getPhone());
+                        favorites.setFoodPrice(model.getPrice());
+
+                        if(!localDb.isFavorites(mAdapter.getRef(position).getKey(),Common.currentUser.getPhone()))
                         {
-                            localDb.addToFavorites(mAdapter.getRef(position).getKey());
+                            localDb.addToFavorites(favorites);
                             holder.fave.setImageResource(R.drawable.ic_favorite_black_24dp);
-                            Toast.makeText(FoodList.this, ""+model.getName()+"was Added To Favorites", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(FoodList.this, ""+model.getName()+"was Added To FavoritesActivity", Toast.LENGTH_SHORT).show();
 
                         }
                         else
                         {
-                            localDb.removeFromFavorites(mAdapter.getRef(position).getKey());
+                            localDb.removeFromFavorites(mAdapter.getRef(position).getKey(),Common.currentUser.getPhone());
                             holder.fave.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                            Toast.makeText(FoodList.this, ""+model.getName()+"was removed from Favorites", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(FoodList.this, ""+model.getName()+"was removed from FavoritesActivity", Toast.LENGTH_SHORT).show();
 
 
                         }

@@ -16,15 +16,24 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:replace="android:label">
-        <activity android:name=".ViewComments"></activity>
+        <activity android:name=".FavoritesActivity"></activity>
+        <activity android:name=".SearchActivity" />
+        <activity android:name=".ViewComments" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCH5s-g_5AXsD9NT3glhsup26PMGerlc6Y" />
+            android:value="AIzaSyADIi6afknwyhApwcj9Xxg1r2odPy-FdC0" />
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.accountkit.ApplicationName"
+            android:value="@string/app_name" />
+        <meta-data
+            android:name="com.facebook.accountkit.ClientToken"
+            android:value="@string/ACCOUNT_KIT_CLIENT_TOKEN" />
 
+        <activity android:name="com.facebook.accountkit.ui.AccountKitActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

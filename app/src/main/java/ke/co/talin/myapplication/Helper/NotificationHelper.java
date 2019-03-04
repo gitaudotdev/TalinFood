@@ -58,4 +58,14 @@ public class NotificationHelper extends ContextWrapper {
              .setAutoCancel(false);
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
+    public Notification.Builder getTalinNotification(String title, String body, Uri soundUri) {
+        return new Notification.Builder(getApplicationContext(),CODEBENDER_CHANEL_ID)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSound(soundUri)
+                .setAutoCancel(false);
+    }
+
 }
