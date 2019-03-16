@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -19,6 +21,7 @@ import java.util.Random;
 import ke.co.talin.myapplication.Common.Common;
 import ke.co.talin.myapplication.Helper.NotificationHelper;
 import ke.co.talin.myapplication.MainActivity;
+import ke.co.talin.myapplication.Model.Token;
 import ke.co.talin.myapplication.OrderStatus;
 import ke.co.talin.myapplication.R;
 
@@ -33,6 +36,25 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
             else
                 sendNotification(remoteMessage);
         }
+    }
+
+    @Override
+    public void onNewToken(String token) {
+        super.onNewToken(token);
+        if(Common.currentUser !=null)
+            updateTokenToFirebase(token);
+    }
+
+    private void updateTokenToFirebase(String tokenRefreshed) {
+        if(Common.currentUser !=null)
+        {
+            FirebaseDatabase db = FirebaseDatabase.getInstance();
+            DatabaseReference tokens = db.getReference("Tokens");
+            Token token = new Token(tokenRefreshed,false); //false because this token is sent from Client
+            tokens.child(Common.currentUser.getPhone()).setValue(token);
+
+        }
+
     }
 
     private void sendNotificationAPI26(RemoteMessage remoteMessage) {

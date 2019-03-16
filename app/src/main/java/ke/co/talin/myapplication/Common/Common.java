@@ -18,6 +18,7 @@ import ke.co.talin.myapplication.Remote.RetrofitClient;
 
 public class Common {
     public static User currentUser;
+    public static String currentKey;
 
     public static String topicName = "News";
 
@@ -25,17 +26,28 @@ public class Common {
 
     public static final String INTENT_FOOD_ID = "Food_id";
 
-    public static  String convertCodeToStatus(String status) {
-        if(status.equals("0"))
-            return "Placed";
-        else if(status.equals("1"))
-            return "On my Way";
-        else
-            return "Shipped";
-    }
+    public static String retaurantSelected="";
+
+    public static final String DELETE = "Delete";
+    public static final String USER_KEY = "User";
+    public static final String PWD_KEY = "password";
+
+    public static final String Consumer_KEY = "6arc83HZAvM5iVNFhss22h40hmKMr7Kg";
+    public static final String Consumer_SECRET = "BnbDgMizTVWPdbGz";
 
     public static final String BASE_URL ="https://fcm.googleapis.com/";
     public static final String GOOGLE_API_URL ="https://maps.googleapis.com/";
+
+    public static String convertCodeToStatus(String code) {
+        if(code.equals("0"))
+            return "Placed";
+        else if (code.equals("1"))
+            return "On my Way";
+        else if (code.equals("2"))
+            return "Shipping";
+        else
+            return "Shipped";
+    }
 
     public static APIService getFCMService(){
         return RetrofitClient.getClient(BASE_URL).create(APIService.class);
@@ -62,13 +74,6 @@ public class Common {
         }
         return false;
     }
-
-    public static final String DELETE = "Delete";
-    public static final String USER_KEY = "User";
-    public static final String PWD_KEY = "password";
-
-    public static final String Consumer_KEY = "6arc83HZAvM5iVNFhss22h40hmKMr7Kg";
-    public static final String Consumer_SECRET = "BnbDgMizTVWPdbGz";
 
     //This function will convert currency to number based on locale
     public static BigDecimal formatCurrency (String amount, Locale locale) throws ParseException, java.text.ParseException {

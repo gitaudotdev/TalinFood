@@ -53,7 +53,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartViewHolder>  {
 //        holder.image_count.setImageDrawable(drawable);
 
         //Fix Elegant number Button not showing added qty
-        Picasso.get()
+        Picasso.with(cart.getBaseContext())
                 .load(mList.get(position).getImage())
                 .resize(70,70) //70dp
                 .centerCrop()

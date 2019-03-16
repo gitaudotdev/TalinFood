@@ -73,7 +73,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
         setContentView(R.layout.activity_food_detail);
 
         database = FirebaseDatabase.getInstance();
-        foods = database.getReference("Foods");
+        foods = database.getReference("Restaurants").child(Common.retaurantSelected).child("detail").child("Foods");
         ratingDb = database.getReference("Ratings");
 
         //InitViews
@@ -201,7 +201,7 @@ public class FoodDetail extends AppCompatActivity implements RatingDialogListene
                 currentfood = dataSnapshot.getValue(Food.class);
 
                 //Set Image
-                Picasso.get().load(currentfood.getImage()).into(food_image);
+                Picasso.with(getBaseContext()).load(currentfood.getImage()).into(food_image);
 
                 mCollapsingToolbarLayout.setTitle(currentfood.getName());
 

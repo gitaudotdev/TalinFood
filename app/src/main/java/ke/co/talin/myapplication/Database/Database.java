@@ -120,7 +120,7 @@ public class Database extends SQLiteAssetHelper{
 
     public void addToFavorites(Favorites food) {
         SQLiteDatabase db = getReadableDatabase();
-        String query = String.format("INSERT INTO FavoritesActivity (FoodId,FoodName,FoodPrice,FoodMenuId,FoodImage,FoodDiscount,FoodDescription,UserPhone) VALUES('%s','%s','%s','%s','%s','%s','%s','%s');",
+        String query = String.format("INSERT INTO FavoritesActivity (FoodId,FoodName,FoodPrice,FoodMenuId,FoodImage,FoodDiscount,FoodDescription,userPhone) VALUES('%s','%s','%s','%s','%s','%s','%s','%s');",
                 food.getFoodId(),
                 food.getFoodName(),
                 food.getFoodPrice(),
@@ -135,13 +135,13 @@ public class Database extends SQLiteAssetHelper{
 
     public void removeFromFavorites(String foodId,String userPhone) {
         SQLiteDatabase db = getReadableDatabase();
-        String query = String.format("DELETE FROM FavoritesActivity WHERE FoodId = '%s' and UserPhone ='%s';",foodId,userPhone);
+        String query = String.format("DELETE FROM FavoritesActivity WHERE FoodId = '%s' and userPhone ='%s';",foodId,userPhone);
         db.execSQL(query);
     }
 
     public boolean isFavorites(String foodId,String userPhone) {
         SQLiteDatabase db = getReadableDatabase();
-        String query = String.format("SELECT * FROM FavoritesActivity WHERE FoodId = '%s' and UserPhone = '%s';",foodId,userPhone);
+        String query = String.format("SELECT * FROM FavoritesActivity WHERE FoodId = '%s' and userPhone = '%s';",foodId,userPhone);
         Cursor cursor = db.rawQuery(query,null);
         if(cursor.getCount()<=0){
             cursor.close();

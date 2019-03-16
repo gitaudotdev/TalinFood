@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
                                     User localUser = dataSnapshot.getValue(User.class);
 
                                     //copy from sign_in activity
-                                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                    Intent intent = new Intent(MainActivity.this, RestaurantList.class);
                                     Common.currentUser = localUser;
                                     startActivity(intent);
                                     //dismiss dialog
@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
                                                                                 User localUser = dataSnapshot.getValue(User.class);
 
                                                                                 //copy from sign_in activity
-                                                                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                                                                Intent intent = new Intent(MainActivity.this, RestaurantList.class);
                                                                                 Common.currentUser = localUser;
                                                                                 startActivity(intent);
                                                                                 //dismiss dialog
@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
                                                                 User localUser = dataSnapshot.getValue(User.class);
 
                                                                 //copy from sign_in activity
-                                                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                                                Intent intent = new Intent(MainActivity.this, RestaurantList.class);
                                                                 Common.currentUser = localUser;
                                                                 startActivity(intent);
                                                                 //dismiss dialog

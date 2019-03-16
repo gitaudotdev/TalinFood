@@ -82,9 +82,10 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+        public void onBitmapFailed(Drawable errorDrawable) {
 
         }
+
 
         @Override
         public void onPrepareLoad(Drawable placeHolderDrawable) {
@@ -119,7 +120,7 @@ public class SearchActivity extends AppCompatActivity {
         mRecyclerView.setLayoutAnimation(controller);
 
         //Search
-        mSearchBar = findViewById(R.id.searchBar);
+        mSearchBar = findViewById(R.id.search_badge);
         mSearchBar.setHint("Enter Your Food");
         //mSearchBar.setSpeechMode(false);
         loadSuggestionList();
@@ -189,7 +190,7 @@ public class SearchActivity extends AppCompatActivity {
             protected void onBindViewHolder(@NonNull final FoodViewHolder holder, final int position, @NonNull final Food model) {
                 holder.txtfood.setText(model.getName());
                 holder.txtprice.setText(String.format("KES %s",model.getPrice().toString()));
-                Picasso.get().load(model.getImage())
+                Picasso.with(getBaseContext()).load(model.getImage())
                         .into(holder.images);
 
                 //Quick Cart
@@ -229,7 +230,7 @@ public class SearchActivity extends AppCompatActivity {
                 holder.share_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Picasso.get()
+                        Picasso.with(getBaseContext())
                                 .load(model.getImage())
                                 .into(target);
 
@@ -311,7 +312,7 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull FoodViewHolder viewHolder, int position, @NonNull Food model) {
                 viewHolder.txtfood.setText(model.getName());
-                Picasso.get().load(model.getImage())
+                Picasso.with(getBaseContext()).load(model.getImage())
                         .into(viewHolder.images);
 
                 final Food local = model;

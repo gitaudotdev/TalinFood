@@ -143,7 +143,7 @@ public class HomeActivity extends AppCompatActivity
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
-        category =database.getReference("Category");
+        category =database.getReference("Restaurants").child(Common.retaurantSelected).child("detail").child("Category");
 
         FirebaseRecyclerOptions<Category> options = new FirebaseRecyclerOptions.Builder<Category>()
                 .setQuery(category,Category.class)
@@ -228,7 +228,7 @@ public class HomeActivity extends AppCompatActivity
         mslider = findViewById(R.id.slider);
         image_list= new HashMap<>();
 
-        final DatabaseReference banner = database.getReference("Banner");
+        final DatabaseReference banner = database.getReference("Restaurants").child(Common.retaurantSelected).child("detail").child("Banner");
 
         banner.addValueEventListener(new ValueEventListener() {
             @Override
@@ -459,7 +459,7 @@ public class HomeActivity extends AppCompatActivity
         alertDialog.setPositiveButton("UPDATE", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
+                dialog.dismiss();
 
 //                final AlertDialog dialog1 = new SpotsDialog(HomeActivity.this);
 //                dialog1.show();

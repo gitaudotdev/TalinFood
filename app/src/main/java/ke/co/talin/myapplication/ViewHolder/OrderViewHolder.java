@@ -3,6 +3,7 @@ package ke.co.talin.myapplication.ViewHolder;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import ke.co.talin.myapplication.Interface.ItemClickListener;
@@ -11,6 +12,7 @@ import ke.co.talin.myapplication.R;
 public class OrderViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
     public TextView txtOrderId,txtOrderStatus,txtOrderPhone,txtOrderAddress;
+    public ImageView btn_delete;
 
     private ItemClickListener mItemClickListener;
 
@@ -20,6 +22,8 @@ public class OrderViewHolder extends RecyclerView.ViewHolder implements View.OnC
         txtOrderId = itemView.findViewById(R.id.order_id);
         txtOrderStatus = itemView.findViewById(R.id.order_status);
         txtOrderPhone = itemView.findViewById(R.id.order_phone);
+
+        btn_delete = itemView.findViewById(R.id.btn_delete);
 
         itemView.setOnClickListener(this);
     }

@@ -70,6 +70,7 @@ public class FoodList extends AppCompatActivity {
     CallbackManager callbackManager;
     ShareDialog shareDialog;
 
+
     //Create Target From Picasso
     Target target = new Target() {
         @Override
@@ -87,9 +88,11 @@ public class FoodList extends AppCompatActivity {
         }
 
         @Override
-        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+        public void onBitmapFailed(Drawable errorDrawable) {
 
         }
+
+
 
         @Override
         public void onPrepareLoad(Drawable placeHolderDrawable) {
@@ -115,7 +118,7 @@ public class FoodList extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipe_refresh);
 
         mDatabase = FirebaseDatabase.getInstance();
-        foodsList = mDatabase.getReference("Foods");
+        foodsList = mDatabase.getReference("Restaurants").child(Common.retaurantSelected).child("detail").child("Foods");;
 
         //Local DB
         localDb = new Database(this);
@@ -244,7 +247,7 @@ public class FoodList extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull FoodViewHolder viewHolder, int position, @NonNull Food model) {
                 viewHolder.txtfood.setText(model.getName());
-                Picasso.get().load(model.getImage())
+                Picasso.with(getBaseContext()).load(model.getImage())
                         .into(viewHolder.images);
 
                 final Food local = model;
@@ -307,7 +310,7 @@ public class FoodList extends AppCompatActivity {
             protected void onBindViewHolder(@NonNull final FoodViewHolder holder, final int position, @NonNull final Food model) {
                 holder.txtfood.setText(model.getName());
                 holder.txtprice.setText(String.format("KES %s",model.getPrice().toString()));
-                Picasso.get().load(model.getImage())
+                Picasso.with(getBaseContext()).load(model.getImage())
                         .into(holder.images);
 
                 //Quick Cart
@@ -347,7 +350,7 @@ public class FoodList extends AppCompatActivity {
                 holder.share_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Picasso.get()
+                        Picasso.with(getBaseContext())
                                 .load(model.getImage())
                                 .into(target);
 
@@ -417,8 +420,11 @@ public class FoodList extends AppCompatActivity {
 
     @Override
     protected void onStop() {
+        if (mAdapter != null)
+            mAdapter.stopListening();
+        if (searchAdapter != null)
+            searchAdapter.stopListening();
         super.onStop();
-        mAdapter.stopListening();
-//        searchAdapter.stopListening();
+
     }
 }

@@ -46,7 +46,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesViewHolder> 
     public void onBindViewHolder(@NonNull final FavoritesViewHolder holder, final int position) {
         holder.txtfood.setText(faveList.get(position).getFoodName());
         holder.txtprice.setText(String.format("KES %s",faveList.get(position).getFoodPrice().toString()));
-        Picasso.get().load(faveList.get(position).getFoodImage())
+        Picasso.with(context).load(faveList.get(position).getFoodImage())
                 .into(holder.images);
 
         //Quick Cart

@@ -48,7 +48,7 @@ public class FavoritesActivity extends AppCompatActivity implements RecyclerItem
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         LayoutAnimationController controller = AnimationUtils.loadLayoutAnimation(mRecyclerView.getContext(),
-                R.anim.fade_in_left);
+                R.anim.layout_fall_down);
         mRecyclerView.setLayoutAnimation(controller);
 
 

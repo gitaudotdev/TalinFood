@@ -166,7 +166,7 @@ public class Cart extends AppCompatActivity implements
         }
 
         mDatabase = FirebaseDatabase.getInstance();
-        requests = mDatabase.getReference("Requests");
+        requests = mDatabase.getReference("Restaurants").child(Common.retaurantSelected).child("Requests");
 
         //Init Service
         mService = Common.getFCMService();
@@ -340,7 +340,9 @@ public class Cart extends AppCompatActivity implements
                 //Ship to this Address features
                 if(isChecked) //isChecked == true
                 {
-                    mGoogleService.getAddressName(String.format("https://maps.googleapis.com/maps/api/geocode/json?latlng=%f,%f&sensor=false",mLastLocation.getLatitude(),mLastLocation.getLongitude()))
+                    mGoogleService.getAddressName(new StringBuilder("https://maps.googleapis.com/maps/api/geocode/json?latlng=")
+                            .append(mLastLocation.getLatitude())
+                            .append(mLastLocation.getLongitude()).toString())
                             .enqueue(new Callback<String>() {
                                 @Override
                                 public void onResponse(Call<String> call, Response<String> response) {
@@ -472,6 +474,7 @@ public class Cart extends AppCompatActivity implements
                                             "Mpesa",
                                             lnmResult.ResponseDescription,
                                             String.format("%s,%s",shippingAddress.getLatLng().latitude,shippingAddress.getLatLng().longitude),
+                                            Common.retaurantSelected,
                                             cart
                                     );
                                     //submit to Firebase
@@ -512,6 +515,7 @@ public class Cart extends AppCompatActivity implements
                             "COD",
                             "Unpaid",
                             String.format("%s,%s",mLastLocation.getLatitude(),mLastLocation.getLongitude()), //coordinates wen user makes order
+                            Common.retaurantSelected,
                             cart
                     );
                     //submit to Firebase
@@ -551,6 +555,7 @@ public class Cart extends AppCompatActivity implements
                                 "Talin's Balance",
                                 "Paid",
                                 String.format("%s,%s",mLastLocation.getLatitude(),mLastLocation.getLongitude()), //coordinates wen user makes order
+                                Common.retaurantSelected,
                                 cart
                         );
                         //submit to Firebase
@@ -653,7 +658,6 @@ public class Cart extends AppCompatActivity implements
                     dataSend.put("title","CodeBender");
                     dataSend.put("message","You Have a new Order"+order_number);
                     DataMessage dataMessage = new DataMessage(serverToken.getToken(),dataSend);
-
 
 
                     mService.sendNotification(dataMessage)
